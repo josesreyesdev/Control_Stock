@@ -37,4 +37,4 @@ build/
 ### Mac OS ###
 .DS_Store
 
-.CreateConnection.java
+.src/main/java/com/jsrdev/CreateConnection.java
