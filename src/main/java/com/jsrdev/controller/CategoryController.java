@@ -5,12 +5,12 @@ import java.util.List;
 
 public class CategoryController {
 
-	public List<?> listar() {
+	public List<?> list() {
 		// TODO
 		return new ArrayList<>();
 	}
 
-    public List<?> cargaReporte() {
+    public List<?> reportUpload() { //cargar reporte
         // TODO
         return new ArrayList<>();
     }
