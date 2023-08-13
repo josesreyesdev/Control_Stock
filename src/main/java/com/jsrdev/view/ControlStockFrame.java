@@ -6,13 +6,14 @@ import com.jsrdev.controller.ProductController;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.io.Serial;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Optional;
 
-public class ControlDeStockFrame extends JFrame {
+public class ControlStockFrame extends JFrame {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private JLabel labelName, labelDescription, labelQuantity, labelCategory;
@@ -21,10 +22,10 @@ public class ControlDeStockFrame extends JFrame {
     private JButton saveButton, modifyButton, clearButton, deleteButton, reportButton;
     private JTable table;
     private DefaultTableModel model;
-    private ProductController productController;
-    private CategoryController categoryController;
+    private final ProductController productController;
+    private final CategoryController categoryController;
 
-    public ControlDeStockFrame() {
+    public ControlStockFrame() {
         super("Products");
 
         this.categoryController = new CategoryController();
@@ -49,7 +50,7 @@ public class ControlDeStockFrame extends JFrame {
         model.addColumn("Descripción Producto");
         model.addColumn("Cantidad Producto");
 
-        cargarTabla();
+        loadTable();
 
         table.setBounds(10, 205, 760, 280);
 
@@ -92,8 +93,8 @@ public class ControlDeStockFrame extends JFrame {
         comboCategory.addItem("Elige una Categoría");
 
         // TODO
-        var categorias = this.categoryController.listar();
-        // categorias.forEach(categoria -> comboCategoria.addItem(categoria));
+        var categories = this.categoryController.list();
+        // categories.forEach(category -> comboCategory.addItem(category));
 
         textName.setBounds(10, 25, 265, 20);
         textDescription.setBounds(10, 65, 265, 20);
@@ -118,92 +119,94 @@ public class ControlDeStockFrame extends JFrame {
     }
 
     private void configFormActions() { // Config acciones del formulario
-        saveButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                guardar();
-                limpiarTabla();
-                cargarTabla();
-            }
+        saveButton.addActionListener(e -> {
+            save();
+            clearTable();
+            loadTable();
         });
 
-        clearButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                clearForm();
-            }
+        clearButton.addActionListener(e -> clearForm());
+
+        deleteButton.addActionListener(e -> {
+            delete();
+            clearTable();
+            loadTable();
         });
 
-        deleteButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                eliminar();
-                limpiarTabla();
-                cargarTabla();
-            }
+        modifyButton.addActionListener(e -> {
+            modify();
+            clearTable();
+            loadTable();
         });
 
-        modifyButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                modificar();
-                limpiarTabla();
-                cargarTabla();
-            }
-        });
-
-        reportButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                abrirReporte();
-            }
-        });
+        reportButton.addActionListener(e -> openReport());
     }
 
-    private void abrirReporte() {
-        new ReporteFrame(this);
+    private void openReport() {
+        new ReportFrame(this);
     }
 
-    private void limpiarTabla() {
+    private void clearTable() {
         model.getDataVector().clear();
     }
 
-    private boolean tieneFilaElegida() {
+    private boolean hasSelectedRow() {
         return table.getSelectedRowCount() == 0 || table.getSelectedColumnCount() == 0;
     }
 
-    private void modificar() {
-        if (tieneFilaElegida()) {
+    private void modify() {
+        if (hasSelectedRow()) {
             JOptionPane.showMessageDialog(this, "Por favor, elije un item");
             return;
         }
 
         Optional.ofNullable(model.getValueAt(table.getSelectedRow(), table.getSelectedColumn()))
-                .ifPresentOrElse(fila -> {
-                    Integer id = (Integer) model.getValueAt(table.getSelectedRow(), 0);
-                    String nombre = (String) model.getValueAt(table.getSelectedRow(), 1);
-                    String descripcion = (String) model.getValueAt(table.getSelectedRow(), 2);
+                .ifPresentOrElse(row -> {
+                    Integer id = Integer.valueOf(model.getValueAt(table.getSelectedRow(), 0).toString());
+                    String name = (String) model.getValueAt(table.getSelectedRow(), 1);
+                    String description = (String) model.getValueAt(table.getSelectedRow(), 2);
+                    Integer quantity = Integer.valueOf(model.getValueAt(table.getSelectedRow(), 3).toString());
 
-                    this.productController.modificar(nombre, descripcion, id);
+                    int rowsModified;
+
+                    try {
+                        rowsModified = this.productController.modify(name, description, quantity, id);
+                    } catch (SQLException e) {
+                        //e.printStackTrace();
+                        throw new RuntimeException(e);
+                    }
+
+                    JOptionPane.showMessageDialog(this, String.format("%d item modificado con éxito!", rowsModified));
                 }, () -> JOptionPane.showMessageDialog(this, "Por favor, elije un item"));
     }
 
-    private void eliminar() {
-        if (tieneFilaElegida()) {
+    private void delete() {
+        if (hasSelectedRow()) {
             JOptionPane.showMessageDialog(this, "Por favor, elije un item");
             return;
         }
 
         Optional.ofNullable(model.getValueAt(table.getSelectedRow(), table.getSelectedColumn()))
                 .ifPresentOrElse(fila -> {
-                    Integer id = (Integer) model.getValueAt(table.getSelectedRow(), 0);
+                    Integer id = Integer.valueOf( model.getValueAt(table.getSelectedRow(), 0).toString());
 
-                    this.productController.eliminar(id);
+                    int quantityEliminated;
+                    try {
+                        quantityEliminated = this.productController.delete(id);
+                    } catch (SQLException sqlException) {
+                        throw new RuntimeException(sqlException);
+                    }
+
 
                     model.removeRow(table.getSelectedRow());
 
-                    JOptionPane.showMessageDialog(this, "Item eliminado con éxito!");
+                    JOptionPane.showMessageDialog(this, quantityEliminated + " Item eliminado con éxito!");
                 }, () -> JOptionPane.showMessageDialog(this, "Por favor, elije un item"));
     }
 
-    private void cargarTabla() {
+    private void loadTable() {
         try {
-            var products = this.productController.listar();
+            var products = this.productController.list();
             products.forEach(product -> model.addRow(new Object[] {
                     product.get("ID"), product.get("NOMBRE"), product.get("DESCRIPCION"), product.get("CANTIDAD") }));
         } catch (SQLException sqlException) {
@@ -211,26 +214,34 @@ public class ControlDeStockFrame extends JFrame {
         }
     }
 
-    private void guardar() {
+    private void save() {
         if (textName.getText().isBlank() || textDescription.getText().isBlank()) {
             JOptionPane.showMessageDialog(this, "Los campos Nombre y Descripción son requeridos.");
             return;
         }
 
-        Integer cantidadInt;
+        Integer quantityInt;
 
         try {
-            cantidadInt = Integer.parseInt(textQuantity.getText());
+            quantityInt = Integer.parseInt(textQuantity.getText());
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, String
                     .format("El campo cantidad debe ser numérico dentro del rango %d y %d.", 0, Integer.MAX_VALUE));
             return;
         }
 
-        var producto = new Object[] { textName.getText(), textDescription.getText(), cantidadInt };
-        var categoria = comboCategory.getSelectedItem();
+        var product = new HashMap<String, String>();
+        product.put("NOMBRE", textName.getText());
+        product.put("DESCRIPCION", textDescription.getText());
+        product.put("CANTIDAD", String.valueOf(quantityInt));
 
-        this.productController.guardar(producto);
+        var category = comboCategory.getSelectedItem();
+
+        try {
+            this.productController.save(product);
+        } catch (SQLException sqlException) {
+            throw new RuntimeException(sqlException);
+        }
 
         JOptionPane.showMessageDialog(this, "Registrado con éxito!");
 
