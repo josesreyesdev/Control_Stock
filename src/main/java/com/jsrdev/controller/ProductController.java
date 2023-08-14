@@ -1,6 +1,7 @@
 package com.jsrdev.controller;
 
 import com.jsrdev.factory.ConnectionFactory;
+import com.jsrdev.model.Product;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -47,11 +48,7 @@ public class ProductController {
         }
     }
 
-    public void save(Map<String, String> product) throws SQLException {
-        String name = product.get("NOMBRE");
-        String description = product.get("DESCRIPCION");
-        int quantity = Integer.parseInt(product.get("CANTIDAD"));
-        int maxQuantity = 50;
+    public void save(Product product) throws SQLException {
 
         final Connection connection = new ConnectionFactory().retrieveConnection();
         try (connection) {
@@ -63,12 +60,7 @@ public class ProductController {
             );
 
             try (statement) {
-                do {
-                    int quantityToSave = Math.min(quantity, maxQuantity);
-                    executeRegister(name, description, quantityToSave, statement);
-                    quantity -= maxQuantity;
-                } while (quantity > 0);
-
+                executeRegister(product, statement);
                 connection.commit();
             } catch (Exception e) {
                 connection.rollback();
@@ -76,12 +68,12 @@ public class ProductController {
         }
     }
 
-    private void executeRegister(String name, String description, Integer quantity, PreparedStatement statement)
+    private void executeRegister(Product product, PreparedStatement statement)
             throws SQLException {
 
-        statement.setString(1, name);
-        statement.setString(2, description);
-        statement.setInt(3, quantity);
+        statement.setString(1, product.getName());
+        statement.setString(2, product.getDescription());
+        statement.setInt(3, product.getQuantity());
 
         statement.execute();
 
@@ -89,8 +81,8 @@ public class ProductController {
 
         try (resultSet) {
             while (resultSet.next()) {
-                int generatedId = resultSet.getInt(1);
-                System.out.printf("Fue insertado el producto con Id: %d ", generatedId);
+                product.setId(resultSet.getInt(1));
+                System.out.printf("Fue insertado el producto: %s ", product);
             }
         }
     }
