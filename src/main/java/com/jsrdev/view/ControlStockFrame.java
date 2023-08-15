@@ -8,8 +8,6 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.Serial;
-import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Optional;
 
 public class ControlStockFrame extends JFrame {
@@ -135,7 +133,7 @@ public class ControlStockFrame extends JFrame {
         });
 
         modifyButton.addActionListener(e -> {
-            modify();
+            update();
             clearTable();
             loadTable();
         });
@@ -155,7 +153,7 @@ public class ControlStockFrame extends JFrame {
         return table.getSelectedRowCount() == 0 || table.getSelectedColumnCount() == 0;
     }
 
-    private void modify() {
+    private void update() {
         if (hasSelectedRow()) {
             JOptionPane.showMessageDialog(this, "Por favor, elije un item");
             return;
@@ -168,15 +166,7 @@ public class ControlStockFrame extends JFrame {
                     String description = (String) model.getValueAt(table.getSelectedRow(), 2);
                     Integer quantity = Integer.valueOf(model.getValueAt(table.getSelectedRow(), 3).toString());
 
-                    int rowsModified;
-
-                    try {
-                        rowsModified = this.productController.modify(name, description, quantity, id);
-                        System.out.println("Columna modificada: " + rowsModified);
-                    } catch (SQLException e) {
-                        //e.printStackTrace();
-                        throw new RuntimeException(e);
-                    }
+                    var rowsModified = this.productController.update(name, description, quantity, id);
 
                     JOptionPane.showMessageDialog(this, String.format("item modificado con éxito! %d", rowsModified));
                 }, () -> JOptionPane.showMessageDialog(this, "Por favor, elije un item"));
@@ -190,15 +180,9 @@ public class ControlStockFrame extends JFrame {
 
         Optional.ofNullable(model.getValueAt(table.getSelectedRow(), table.getSelectedColumn()))
                 .ifPresentOrElse(fila -> {
-                    Integer id = Integer.valueOf( model.getValueAt(table.getSelectedRow(), 0).toString());
+                    Integer id = Integer.valueOf(model.getValueAt(table.getSelectedRow(), 0).toString());
 
-                    int quantityEliminated;
-                    try {
-                        quantityEliminated = this.productController.delete(id);
-                    } catch (SQLException sqlException) {
-                        throw new RuntimeException(sqlException);
-                    }
-
+                    int quantityEliminated = this.productController.delete(id);
 
                     model.removeRow(table.getSelectedRow());
 
@@ -207,13 +191,10 @@ public class ControlStockFrame extends JFrame {
     }
 
     private void loadTable() {
-        try {
-            var products = this.productController.list();
-            products.forEach(product -> model.addRow(new Object[] {
-                    product.get("ID"), product.get("NOMBRE"), product.get("DESCRIPCION"), product.get("CANTIDAD") }));
-        } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
-        }
+        var products = this.productController.list();
+        products.forEach(product -> model.addRow(new Object[]{
+                product.getId(), product.getName(), product.getDescription(), product.getQuantity()
+        }));
     }
 
     private void save() {
@@ -236,11 +217,7 @@ public class ControlStockFrame extends JFrame {
 
         var category = comboCategory.getSelectedItem();
 
-        try {
-            this.productController.save(product);
-        } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
-        }
+        this.productController.save(product);
 
         JOptionPane.showMessageDialog(this, "Registrado con éxito!");
 
