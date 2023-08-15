@@ -2,6 +2,7 @@ package com.jsrdev.view;
 
 import com.jsrdev.controller.CategoryController;
 import com.jsrdev.controller.ProductController;
+import com.jsrdev.model.Product;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -171,12 +172,13 @@ public class ControlStockFrame extends JFrame {
 
                     try {
                         rowsModified = this.productController.modify(name, description, quantity, id);
+                        System.out.println("Columna modificada: " + rowsModified);
                     } catch (SQLException e) {
                         //e.printStackTrace();
                         throw new RuntimeException(e);
                     }
 
-                    JOptionPane.showMessageDialog(this, String.format("%d item modificado con éxito!", rowsModified));
+                    JOptionPane.showMessageDialog(this, String.format("item modificado con éxito! %d", rowsModified));
                 }, () -> JOptionPane.showMessageDialog(this, "Por favor, elije un item"));
     }
 
@@ -220,7 +222,7 @@ public class ControlStockFrame extends JFrame {
             return;
         }
 
-        Integer quantityInt;
+        int quantityInt;
 
         try {
             quantityInt = Integer.parseInt(textQuantity.getText());
@@ -230,10 +232,7 @@ public class ControlStockFrame extends JFrame {
             return;
         }
 
-        var product = new HashMap<String, String>();
-        product.put("NOMBRE", textName.getText());
-        product.put("DESCRIPCION", textDescription.getText());
-        product.put("CANTIDAD", String.valueOf(quantityInt));
+        var product = new Product(textName.getText(), textDescription.getText(), quantityInt);
 
         var category = comboCategory.getSelectedItem();
 
