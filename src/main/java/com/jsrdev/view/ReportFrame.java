@@ -12,7 +12,6 @@ public class ReportFrame extends JFrame {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private JTable tableReport;
     private final DefaultTableModel model;
 
     private final CategoryController categoryController;
@@ -25,7 +24,7 @@ public class ReportFrame extends JFrame {
         Container container = getContentPane();
         setLayout(null);
 
-        tableReport = new JTable();
+        JTable tableReport = new JTable();
         tableReport.setBounds(0, 0, 600, 400);
         container.add(tableReport);
 
@@ -44,10 +43,19 @@ public class ReportFrame extends JFrame {
 
     private void reportUpload() {
         var content = categoryController.reportUpload();
-        
-        // TODO
-        content.forEach(fila -> model
-                .addRow(new Object[] {}));
+
+        content.forEach(category -> {
+            model.addRow(new Object[] { category });
+
+            var products = category.getProducts();
+            products.forEach(product -> model.addRow(
+                    new Object[] {
+                            "",
+                            product.getName(),
+                            product.getQuantity()
+                    }
+            ));
+        });
     }
 
 }

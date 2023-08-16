@@ -18,7 +18,7 @@ public class ProductDAO {
             //connection.setAutoCommit(false); // Sirve para garantizar y coherencia en una transaccion en la bd
 
             final PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO PRODUCTO (nombre, descripcion, cantidad) VALUES (?, ?, ?)",
+                    "INSERT INTO PRODUCTO (nombre, descripcion, cantidad, category_id) VALUES (?, ?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS
             );
 
@@ -26,6 +26,7 @@ public class ProductDAO {
                 statement.setString(1, product.getName());
                 statement.setString(2, product.getDescription());
                 statement.setInt(3, product.getQuantity());
+                statement.setInt(4, product.getCategoryId());
 
                 statement.execute();
 
@@ -38,10 +39,10 @@ public class ProductDAO {
                     }
                 }
 
-                /**
-                 * connection.commit(); // Sirve para confirmar todas las op como transaccion unica
-                 * connection.rollback(); // Descartar op realizas en una transaccion si hubo un error en el catch
-                 * */
+                //connection.commit(); // Sirve para confirmar todas las op como transaccion unica
+
+                //connection.rollback(); // Descartar op realizas en una transaccion si hubo un error en el catch
+
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -57,22 +58,7 @@ public class ProductDAO {
             );
 
             try (statement) {
-                statement.execute();
-
-                final ResultSet resultSet = statement.getResultSet();
-
-                try (resultSet) {
-                    while (resultSet.next()) {  // para iterar hasta el ultimo elemento
-                        Product rowProduct = new Product(
-                                resultSet.getInt("ID"),
-                                resultSet.getString("NOMBRE"),
-                                resultSet.getString("DESCRIPCION"),
-                                resultSet.getInt("CANTIDAD")
-                        );
-
-                        result.add(rowProduct);
-                    }
-                }
+                setRowProduct(result, statement);
             }
             return result;
         } catch (SQLException e) {
@@ -117,6 +103,43 @@ public class ProductDAO {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    // Product list by categories
+    public List<Product> List(Integer categoryId) {
+        List<Product> result = new ArrayList<>();
+        try {
+            var querySelect = "SELECT ID, NOMBRE, DESCRIPCION, CANTIDAD FROM PRODUCTO WHERE CATEGORY_ID = ?";
+            System.out.println(querySelect);
+            PreparedStatement statement = connection.prepareStatement(querySelect);
+
+            try (statement) {
+                statement.setInt(1, categoryId);
+                setRowProduct(result, statement);
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void setRowProduct(List<Product> result, PreparedStatement statement) throws SQLException {
+        statement.execute();
+
+        final ResultSet resultSet = statement.getResultSet();
+
+        try (resultSet) {
+            while (resultSet.next()) {  // para iterar hasta el ultimo elemento
+                Product rowProduct = new Product(
+                        resultSet.getInt("ID"),
+                        resultSet.getString("NOMBRE"),
+                        resultSet.getString("DESCRIPCION"),
+                        resultSet.getInt("CANTIDAD")
+                );
+
+                result.add(rowProduct);
+            }
         }
     }
 }

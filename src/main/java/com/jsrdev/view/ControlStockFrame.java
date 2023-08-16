@@ -2,12 +2,14 @@ package com.jsrdev.view;
 
 import com.jsrdev.controller.CategoryController;
 import com.jsrdev.controller.ProductController;
+import com.jsrdev.model.Category;
 import com.jsrdev.model.Product;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.Serial;
+import java.util.Objects;
 import java.util.Optional;
 
 public class ControlStockFrame extends JFrame {
@@ -17,7 +19,7 @@ public class ControlStockFrame extends JFrame {
 
     private JLabel labelName, labelDescription, labelQuantity, labelCategory;
     private JTextField textName, textDescription, textQuantity;
-    private JComboBox<Object> comboCategory;
+    private JComboBox<Category> comboCategory;
     private JButton saveButton, modifyButton, clearButton, deleteButton, reportButton;
     private JTable table;
     private DefaultTableModel model;
@@ -89,11 +91,10 @@ public class ControlStockFrame extends JFrame {
         textDescription = new JTextField();
         textQuantity = new JTextField();
         comboCategory = new JComboBox<>();
-        comboCategory.addItem("Elige una Categoría");
+        comboCategory.addItem(new Category(0, "Elige una Categoría"));
 
-        // TODO
         var categories = this.categoryController.list();
-        // categories.forEach(category -> comboCategory.addItem(category));
+        categories.forEach(category -> comboCategory.addItem(category));
 
         textName.setBounds(10, 25, 265, 20);
         textDescription.setBounds(10, 65, 265, 20);
@@ -198,8 +199,9 @@ public class ControlStockFrame extends JFrame {
     }
 
     private void save() {
-        if (textName.getText().isBlank() || textDescription.getText().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Los campos Nombre y Descripción son requeridos.");
+        if (textName.getText().isBlank() || textDescription.getText().isBlank() ||
+                Objects.requireNonNull(comboCategory.getSelectedItem()).toString().equals("Elige una Categoría"))  {
+            JOptionPane.showMessageDialog(this, "Los campos Nombre, Descripción y Categoría son requeridos.");
             return;
         }
 
@@ -215,9 +217,9 @@ public class ControlStockFrame extends JFrame {
 
         var product = new Product(textName.getText(), textDescription.getText(), quantityInt);
 
-        var category = comboCategory.getSelectedItem();
+        var category = (Category) comboCategory.getSelectedItem();
 
-        this.productController.save(product);
+        this.productController.save(product, category.getId());
 
         JOptionPane.showMessageDialog(this, "Registrado con éxito!");
 
