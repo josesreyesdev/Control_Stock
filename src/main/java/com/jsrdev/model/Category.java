@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Category {
-    private Integer id;
-    private String name;
+    private final Integer id;
+    private final String name;
 
     private List<Product> products;
 
