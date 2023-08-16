@@ -14,7 +14,8 @@ public class ProductController {
         this.productDao = new ProductDAO(new ConnectionFactory().retrieveConnection());
     }
 
-    public void save(Product product) {
+    public void save(Product product, Integer categoryId) {
+        product.setCategoryId(categoryId);
         productDao.save(product);
     }
 
@@ -29,4 +30,5 @@ public class ProductController {
     public int delete(Integer id) {
         return productDao.delete(id);
     }
+
 }

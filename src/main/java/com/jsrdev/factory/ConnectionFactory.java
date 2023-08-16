@@ -13,7 +13,7 @@ public class ConnectionFactory {
         var pooledDataSource = new ComboPooledDataSource();
         pooledDataSource.setJdbcUrl("jdbc:mysql://localhost/control_stock?useTimeZone=true&serverTimeZone=UTC");
         pooledDataSource.setUser("root");
-        pooledDataSource.setPassword("Sarj950905");
+        pooledDataSource.setPassword("123456");
 
         // Setear la cantidad maxima de conexiones
         pooledDataSource.setMaxPoolSize(10);

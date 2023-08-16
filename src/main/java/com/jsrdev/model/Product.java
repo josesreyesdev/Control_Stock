@@ -3,9 +3,11 @@ package com.jsrdev.model;
 public class Product {
 
     private Integer id;
-    private String name;
+    private final String name;
     private String description;
-    private Integer quantity;
+    private final Integer quantity;
+
+    private Integer categoryId;
 
     public Product(String name, String description, Integer quantity) {
         this.name = name;
@@ -20,28 +22,22 @@ public class Product {
         this.quantity = quantity;
     }
 
-    public String getName() {
-        return name;
+    public Product(Integer id, String name, Integer quantity) {
+        this.id = id;
+        this.name = name;
+        this.quantity = quantity;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getName() {
+        return name;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public Integer getQuantity() {
         return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
     }
 
     public Integer getId() {
@@ -51,15 +47,23 @@ public class Product {
         this.id = id;
     }
 
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+
     @Override
     public String toString() {
         return String.format(
-                "{Id: %d, Name: %s, Description: %s, Quantity: %d}",
+                "{Id: %d, Name: %s, Description: %s, Quantity: %d, CategoryId: %d}",
                 this.id,
                 this.name,
                 this.description,
-                this.quantity
+                this.quantity,
+                this.categoryId
         );
     }
-
 }
